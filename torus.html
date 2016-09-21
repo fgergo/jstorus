@@ -1,0 +1,84 @@
+
+<html><head><title>A Rotating Torus, 3D-Rendered In Your Browser</title>
+<script src="torus_indent.js">
+</script>
+</head><body><h1>A rotating torus</h1>
+<p>I thought it would be fun one night to write a 3D engine in
+JavaScript.  The next afternoon, I had this.  Originally <a
+href="http://lists.canonical.org/pipermail/kragen-hacks/2007-February/000448.html">posted
+to kragen-hacks in February 2007</a></p>
+<p>
+<!-- <input id="ms" /> ms -->
+<input id="go" type="checkbox" checked="checked" /><label for="go"> Go</label>
+<input id="fill" type="checkbox" /><label for="fill"> Solid</label>
+<input id="translucent" type="checkbox" /><label 
+  for="translucent"> Translucent</label>
+<input id="trails" type="checkbox" /><label for="trails"> Trails</label>
+</p>
+<canvas id="canvas" width="400" height="400">
+</canvas>
+
+<h2>Problems</h2>
+
+<p>It's not perfect, for sure; I mean, heck, I spent less than a day
+on it.  In case I come back to it later, I made the following list of
+its biggest problems.</p>
+
+<ul>
+ <li>Because all the loops and all the math are in JavaScript, and
+  because &lt;canvas&gt; drawing is painfully slow, it's painfully
+  slow.  On a dual-core 1.8GHz machine, it does around 3000 polygons
+  per second, with a single lighting source and flat shading.  There
+  might be room in there to double its speed.  But it's still fast
+  enough to be cool. (I mean, hey, that's about as fast as Mesa,
+  right? :) )</li>
+ <li>I haven't implemented Gouraud shading yet.</li>
+ <li>I wish I could implement texture-mapping, but I'm pretty sure
+  that'll be too slow.</li>
+ <li>On one hand, it's great that the &lt;canvas&gt; widget does
+  antialiased drawing with alpha by default.  But I wish I could turn
+  it off for this &mdash; it results in dotted lines running down the
+  diagonals of all the rectangles.  I could work around this to some
+  extent by supporting rectangles (well, planar quadrilaterals) as a
+  primitive, but that still leaves dotted dark lines running down the
+  joints between them.  Supersampling antialiasing (where each pixel
+  starts out as 4 or 9 pixels in a super-res image) would work.</li>
+ <li>There's, like, no UI.  There are some nifty solid-modeling things
+  in the code that aren't obvious from the UI.</li>
+ <li>If you change the state of one of the checkboxes while "Go" is
+  unchecked, nothing happens until you check "Go" again; </li>
+ <li>There are still big optimization opportunities in the code; for example:
+  <ul>
+    <li> You could store the normals and transform them with the
+     matrix instead of doing a cross-product on every polygon every frame;</li>
+    <li> And in this object, there are eight times as many polygons as
+     there are normals, so you could win even bigger;</li>
+    <li> It's not even doing backface removal because I'm too dumb to figure out
+     how to do it safely with perspective;</li>
+    <li> If you had a numerical-array library like NumPy or PDL in
+     your browser, you could probably make it 100 times faster,
+     roughly as fast as a normal software renderer; also, the code
+     would be a lot simpler; </li>
+    <li> If you were doing it in 3D hardware, you could probably make
+     it 100 times faster again;</li>
+    <li> Maybe there's some way to do the Z-sort without invoking a
+     JavaScript function for every pair of elements to be compared; </li>
+    <li> There are lots of places where we might be able to cons less
+     by preallocating arrays of the right size; </li>
+    <li> And, going even further, there's really no reason it needs to
+     cons at all when going from one frame to the next &mdash; it
+     should be able to run in constant space;</li>
+    <li> This is probably irrelevant except for the wire-frame, but
+     unrolling the loops in 'xform' would probably make it faster; </li>
+    <li> The 'extrude_shape' function may generate the same points and
+     lines twice &mdash; in the torus, there are two copies of the
+     beginning/end circle. </li>
+ </ul></li>
+ <li>The stitching logic in 'extrude_shape' is pretty tightly tied to
+  how 'augment' works.</li>
+ <li>Also, maybe it would be nice to be able to pull out that logic
+  for use in some other kind of mesh-generation code, like something
+  that graphs a height field or a parametric function.</li>
+</ul>
+
+</body></html>
